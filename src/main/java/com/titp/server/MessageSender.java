@@ -35,7 +35,6 @@ public class MessageSender {
         outputStream.flush();
 
         logger.debug("Response sent: MTI={}, Length={}, output = {}", Integer.toString(message.getType(), 16), output.length, ByteArrayUtil.toHexString(output));
-        byteBuffer.reset();
     }
 
     /**
