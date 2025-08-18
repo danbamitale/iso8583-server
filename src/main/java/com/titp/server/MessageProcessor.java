@@ -1,11 +1,11 @@
 package com.titp.server;
 
+import ch.qos.logback.core.encoder.ByteArrayUtil;
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.IsoType;
 import com.solab.iso8583.IsoValue;
 import com.solab.iso8583.MessageFactory;
 import com.titp.server.utils.ISOResponseCode;
-import com.titp.server.utils.TripleDES;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,7 @@ public class MessageProcessor {
             // Strip header if present
             byte[] isoMessageBytes = HeaderStripper.stripHeaderIfPresent(messageBytes);
 
-            logger.info("messageBytes = {}\nstripMessageBytes = {}", TripleDES.Hex2String(messageBytes), TripleDES.Hex2String(isoMessageBytes));
+            logger.info("messageBytes = {}\nstripMessageBytes = {}", ByteArrayUtil.toHexString(messageBytes), ByteArrayUtil.toHexString(isoMessageBytes));
             request = messageFactory.parseMessage(isoMessageBytes, 0);
 
             // Parse the ISO message
@@ -42,7 +42,6 @@ public class MessageProcessor {
                     messageId,
                     messageBytes.length,
                     HeaderStripper.stripHeaderIfPresent(messageBytes).length);
-
 
 
             //Todo Process request here. Use Template Pattern to handle
