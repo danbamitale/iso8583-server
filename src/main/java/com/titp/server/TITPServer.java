@@ -3,6 +3,7 @@ package com.titp.server;
 import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.MessageFactory;
 import com.solab.iso8583.parse.ConfigParser;
+import com.titp.server.processor.ProcessorFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +33,10 @@ public class TITPServer {
         // Load ISO 8583 configuration
         this.messageFactory = initialiseMessageFactory();
         logger.info("ISO 8583 configuration loaded successfully");
+        
+        // Initialize processor factory
+        ProcessorFactory.initialize(messageFactory);
+        logger.info("Processor factory initialized successfully");
     }
 
     private MessageFactory<IsoMessage> initialiseMessageFactory() throws IOException {

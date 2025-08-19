@@ -81,6 +81,7 @@ public class ClientHandler implements Runnable {
         } else {
             logger.error("Error processing message #{}: {}", messageId, result.getError().getMessage());
             messageSender.sendErrorResponse(result.getResponse());
+            closeConnection();
         }
     }
 

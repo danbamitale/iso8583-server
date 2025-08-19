@@ -5,6 +5,8 @@ import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.IsoType;
 import com.solab.iso8583.IsoValue;
 import com.solab.iso8583.MessageFactory;
+import com.titp.server.processor.MTIProcessor;
+import com.titp.server.processor.ProcessorFactory;
 import com.titp.server.utils.ISOResponseCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,10 +46,13 @@ public class MessageProcessor {
                     HeaderStripper.stripHeaderIfPresent(messageBytes).length);
 
 
-            //Todo Process request here. Use Template Pattern to handle
+            // Process request using Template Pattern
+            MTIProcessor.ProcessingResult processingResult = processRequestWithTemplate(request);
 
-            // Create response
-            IsoMessage response = createResponse(request, ISOResponseCode.SUCCESS);
+            // Create response with the processing result
+            IsoMessage response = processingResult.hasCustomResponse() 
+                ? processingResult.getResponse() 
+                : createResponse(request, processingResult.getResponseCode());
 
             return new MessageResult(true, request, response, null);
 
@@ -57,6 +62,22 @@ public class MessageProcessor {
             IsoMessage response = createResponse(request, ISOResponseCode.ERROR);
             return new MessageResult(false, request, response, e);
         }
+    }
+
+    /**
+     * Process request using the Template Pattern
+     */
+    private MTIProcessor.ProcessingResult processRequestWithTemplate(IsoMessage request) {
+        int mti = request.getType();
+        MTIProcessor processor = ProcessorFactory.getProcessor(mti);
+        
+        if (processor == null) {
+            logger.warn("No processor found for MTI: {}, using default processing", String.format("%04X", mti));
+            return new MTIProcessor.ProcessingResult(true, ISOResponseCode.SUCCESS, "Default processing");
+        }
+        
+        logger.info("Using processor for MTI: {}", String.format("%04X", mti));
+        return processor.process(request);
     }
 
     /**

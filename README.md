@@ -52,12 +52,19 @@ The server uses a clean, modular architecture with separation of concerns:
 - **HeaderStripper**: Removes 5-byte headers from incoming messages
 - **MessageLogger**: Provides comprehensive logging of received and sent messages
 - **MessageSender**: Manages sending responses to clients
+- **MTI Processors**: Template pattern implementation for different message types
+  - **AuthorizationProcessor**: Handles MTI 0100 (Authorization requests)
+  - **FinancialProcessor**: Handles MTI 0200 (Financial transactions)
+  - **NetworkManagementProcessor**: Handles MTI 0800 (Network management)
+  - **ProcessorFactory**: Factory pattern for processor management
 
 ### Benefits:
 - ✅ **Single Responsibility**: Each class has one clear purpose
 - ✅ **Testability**: Components can be tested independently
 - ✅ **Maintainability**: Easy to modify or extend individual components
 - ✅ **Readability**: Clear separation of concerns makes code easier to understand
+- ✅ **Custom Responses**: Processors can return custom IsoMessage responses with specific fields
+- ✅ **Template Pattern**: Consistent processing flow with customizable business logic
 
 ## Configuration
 
@@ -69,10 +76,26 @@ The server uses the `config_titp_simple.xml` file for ISO 8583 message format co
 
 ## Message Types Supported
 
+### Processed with Template Pattern:
 - **0100/0110**: Authorization request/response
+  - Validates PAN, processing code, and amount
+  - Simulates authorization logic with fraud detection
+  - Supports purchase, refund, and withdrawal transactions
+  - **Custom Response**: Returns authorization ID and approval status
 - **0200/0210**: Financial request/response  
-- **0400/0410**: Reversal request/response
+  - Processes purchase, refund, and cash withdrawal transactions
+  - Validates transaction amounts and merchant information
+  - Implements transaction limits and business rules
 - **0800/0810**: Network management request/response
+  - Handles sign-on, sign-off, echo test, and cutover requests
+  - Validates transmission date/time
+  - Supports network connectivity management
+
+### Supported but using Default Processing:
+- **0400/0410**: Reversal request/response
+- **0420/0421**: Reversal request/response
+- **0430**: Reversal request/response
+- **0500/0510**: Reconciliation request/response
 
 ## Protocol
 
