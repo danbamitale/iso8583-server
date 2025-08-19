@@ -5,13 +5,10 @@ import com.solab.iso8583.IsoMessage;
 import com.solab.iso8583.IsoType;
 import com.solab.iso8583.IsoValue;
 import com.solab.iso8583.MessageFactory;
-import com.sun.net.httpserver.Authenticator;
 import com.titp.server.utils.ISOResponseCode;
 import com.titp.server.utils.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Random;
 
 /**
  * Processor for Financial Transaction messages (MTI 0200)
@@ -34,7 +31,6 @@ public class FinancialProcessor extends MTIProcessor {
         }
 
         // Validate PAN (Field 2)
-
         String pan = ByteArrayUtil.toHexString((byte[]) request.getField(2).getValue());
         if (pan == null || pan.length() < 13 || pan.length() > 19) {
             logger.warn("Invalid PAN length: {}", pan != null ? pan.length() : "null");
@@ -103,7 +99,6 @@ public class FinancialProcessor extends MTIProcessor {
             long amountValue = Long.parseLong(amount);
 
             // Simulate different transaction types based on processing code
-
             switch (processingCode) {
                 case 0: // Purchase
                     logger.info("Processing purchase transaction");
@@ -128,18 +123,18 @@ public class FinancialProcessor extends MTIProcessor {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private IsoMessage createSuccessResponse(IsoMessage request) {
         IsoMessage response = ((MessageFactory<IsoMessage>) messageFactory).createResponse(request);
-
-
 
         // Set response code
         response.setField(39, new IsoValue<>(IsoType.ALPHA, ISOResponseCode.SUCCESS.getCode(), 2));
 
+        // Add retrieval reference number (Field 37)
         response.setField(37, new IsoValue<>(IsoType.ALPHA, RandomUtils.getRandomString(12), 12));
 
-        // Add authorization-specific fields
-        response.setField(38, new IsoValue<>(IsoType.ALPHA, RandomUtils.getRandomString(6), 6)); // Authorization ID
+        // Add authorization ID (Field 38)
+        response.setField(38, new IsoValue<>(IsoType.ALPHA, RandomUtils.getRandomString(6), 6));
 
         return response;
     }

@@ -57,7 +57,6 @@ public class MessageProcessor {
             return new MessageResult(true, request, response, null);
 
         } catch (Exception e) {
-            e.printStackTrace();
             logger.error("Error processing message", e);
             IsoMessage response = createResponse(request, ISOResponseCode.ERROR);
             return new MessageResult(false, request, response, e);
