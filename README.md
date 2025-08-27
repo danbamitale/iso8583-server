@@ -47,6 +47,10 @@ The server uses a clean, modular architecture with separation of concerns:
 - **TITPServer**: Main server class that accepts connections and manages the thread pool
 - **ClientHandler**: Orchestrates client connection handling and message flow
 
+### Configuration Management:
+- **ServerConfig**: Centralized server configuration with builder pattern
+- **MessageFactoryManager**: Manages ISO 8583 message factory initialization and validation
+
 ### Processing Components:
 - **MessageProcessor**: Handles ISO 8583 message parsing and response creation
 - **HeaderStripper**: Removes 5-byte headers from incoming messages
@@ -65,6 +69,8 @@ The server uses a clean, modular architecture with separation of concerns:
 - ✅ **Readability**: Clear separation of concerns makes code easier to understand
 - ✅ **Custom Responses**: Processors can return custom IsoMessage responses with specific fields
 - ✅ **Template Pattern**: Consistent processing flow with customizable business logic
+- ✅ **Configuration Management**: Centralized configuration with builder pattern
+- ✅ **Error Handling**: Improved error handling and recovery mechanisms
 
 ## Configuration
 

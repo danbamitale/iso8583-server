@@ -1,19 +1,29 @@
 package com.titp.server.processor;
 
+import ch.qos.logback.core.encoder.ByteArrayUtil;
 import com.solab.iso8583.IsoMessage;
+import com.solab.iso8583.IsoType;
+import com.solab.iso8583.IsoValue;
 import com.solab.iso8583.MessageFactory;
 import com.titp.server.utils.ISOResponseCode;
+import com.titp.server.utils.IsoMessageUtils;
+import com.titp.server.utils.RandomUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.ByteBuffer;
 
 /**
  * Processor for Network Management messages (MTI 0800)
  */
 public class NetworkManagementProcessor extends MTIProcessor {
     private static final Logger logger = LoggerFactory.getLogger(NetworkManagementProcessor.class);
+    private final IsoMessageUtils isoMessageUtils;
+
 
     public NetworkManagementProcessor(MessageFactory<?> messageFactory) {
         super(messageFactory);
+        this.isoMessageUtils = new IsoMessageUtils((MessageFactory<IsoMessage>) messageFactory);
     }
 
     @Override
@@ -34,14 +44,15 @@ public class NetworkManagementProcessor extends MTIProcessor {
             logger.info("Processing network management message");
 
             // Process different network management functions
-            boolean isProcessed = processNetworkManagement("", "001");
+            var response = processNetworkManagement(request);
+            var isSuccess =  response.getField(39).getValue().toString().equals("00");
 
-            if (isProcessed) {
+            if (isSuccess) {
                 logger.info("Network management message processed successfully");
-                return new ProcessingResult(true, ISOResponseCode.SUCCESS, "Network management processed successfully");
+                return new ProcessingResult(true, ISOResponseCode.SUCCESS, "Network management processed successfully", response);
             } else {
                 logger.info("Network management message failed");
-                return new ProcessingResult(false, ISOResponseCode.ERROR, "Network management processing failed");
+                return new ProcessingResult(false, ISOResponseCode.ERROR, "Network management processing failed", response);
             }
 
         } catch (Exception e) {
@@ -58,63 +69,34 @@ public class NetworkManagementProcessor extends MTIProcessor {
     /**
      * Process different network management functions
      */
-    private boolean processNetworkManagement(String transmissionDateTime, String networkCode) {
-        switch (networkCode) {
-            case "001": // Sign-on
-                logger.info("Processing sign-on request");
-                return processSignOn(transmissionDateTime);
+    private IsoMessage processNetworkManagement(IsoMessage request) {
+        var processingCode = request.getField(3).getValue().toString();
+        var transmissionDate = request.getField(11).getValue().toString();
+        var transactionType = Integer.parseInt(processingCode.substring(0, 2));
 
-            case "002": // Sign-off
-                logger.info("Processing sign-off request");
-                return processSignOff(transmissionDateTime);
+        logger.info("Processing code: {}, transactionType: {}, transmissionDate: {}", processingCode, transactionType, transmissionDate);
 
-            case "301": // Echo test
-                logger.info("Processing echo test");
-                return processEchoTest(transmissionDateTime);
 
-            case "302": // Cutover
-                logger.info("Processing cutover request");
-                return processCutover(transmissionDateTime);
-
+        switch (transactionType) {
+            case 92:
+                return processWorkingKeyDownload(request);
             default:
-                logger.warn("Unknown network management code: {}", networkCode);
-                return true;
+                logger.warn("Unknown network management code: {}", transactionType);
+                return isoMessageUtils.createSuccessResponse(request, ISOResponseCode.SUCCESS);
         }
     }
 
-    /**
-     * Process sign-on request
-     */
-    private boolean processSignOn(String transmissionDateTime) {
-        logger.info("Sign-on request received at: {}", transmissionDateTime);
-        // Simulate successful sign-on
-        return true;
-    }
 
-    /**
-     * Process sign-off request
-     */
-    private boolean processSignOff(String transmissionDateTime) {
-        logger.info("Sign-off request received at: {}", transmissionDateTime);
-        // Simulate successful sign-off
-        return true;
-    }
+    private IsoMessage processWorkingKeyDownload(IsoMessage request) {
+        var response = isoMessageUtils.createSuccessResponse(request, ISOResponseCode.SUCCESS);
 
-    /**
-     * Process echo test
-     */
-    private boolean processEchoTest(String transmissionDateTime) {
-        logger.info("Echo test received at: {}", transmissionDateTime);
-        // Echo tests should always succeed
-        return true;
-    }
+        var key = ByteArrayUtil.hexStringToByteArray("00000000000000000000000000000000");
+        var buffer = ByteBuffer.allocate(2 + 16);
+        buffer.putShort((short) key.length);
+        buffer.put(key);
 
-    /**
-     * Process cutover request
-     */
-    private boolean processCutover(String transmissionDateTime) {
-        logger.info("Cutover request received at: {}", transmissionDateTime);
-        // Simulate successful cutover
-        return true;
+        response.setField(62, new IsoValue<>(IsoType.LLLBIN, buffer.array()));
+
+        return response;
     }
 }
