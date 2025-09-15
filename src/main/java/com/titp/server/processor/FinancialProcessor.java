@@ -111,7 +111,9 @@ public class FinancialProcessor extends MTIProcessor {
                 case 31: // Cash withdrawal
                     logger.info("Processing cash withdrawal");
                     return amountValue <= 20000; // Limit withdrawal to 20000
-
+                case 10: //reversal
+                    logger.info("Processing reversal");
+                    return true;
                 default:
                     logger.warn("Unknown transaction type: {}", processingCode);
                     return false;
